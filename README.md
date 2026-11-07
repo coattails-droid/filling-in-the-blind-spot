@@ -8,6 +8,8 @@ completing a pattern it cannot actually see.
 A copycat of the classic Sensation & Perception textbook CD demo ("Filling in the
 Blind Spot"), re-drawn in Coattails colours (Sunlight golds, Lotus pinks, teal depths).
 
+Adapted from *Sensation and Perception* (8th ed.) by E. Bruce Goldstein.
+
 ## Use
 
 Open `index.html` (or the GitHub Pages site) fullscreen.
