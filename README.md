@@ -10,19 +10,21 @@ Blind Spot"), re-drawn in Coattails colours (Sunlight golds, Lotus pinks, teal d
 
 Adapted from the VisualLab companion software for *Sensation and Perception* (8th ed.) by E. Bruce Goldstein.
 
-## Use
+## The demos
 
-Open `index.html` (or the GitHub Pages site) fullscreen.
+1. **Triangle rain** — cover one eye, stare at the fixation dot, slide *Hole
+   distance* until the white locator disc vanishes (that is your blind spot),
+   then start the rain and watch the hole flood with triangles and disappear.
+2. **The line that doesn't break** — a bold line runs the full width of the
+   field with a gap cut out of it. Position the gap on your blind spot the
+   same way, and the line reads as one unbroken stroke: the brain would
+   rather continue a line than report a break in it.
 
-1. **Find my blind spot** — cover one eye, stare at the fixation dot, slide
-   *Hole distance* until the white locator disc vanishes completely.
-2. **Start the rain** — keep staring at the dot. Within 5–20 seconds the empty
-   circle floods with triangles and disappears into the field.
-
-Sliders adjust hole distance, hole size, and rain brightness. Right eye is the
-default; the fixation point mirrors automatically for the left-eye test. v3
-layout: the fixation dot sits a quarter of the way down the field and the hole
-three quarters down, on a diagonal (director's adjustment, 2026-11-07).
+Sliders adjust distances, hole/gap sizes, and rain brightness. Right eye is
+the default; fixation points mirror automatically for the left-eye tests.
+Layout history: v3 moved the rain demo's fixation dot to a quarter of the
+field height and its hole to three quarters (director's adjustment,
+2026-11-07); v4 added the line demo below the rain demo.
 
 ## Why it works
 
