@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Filling In the Blind Spot — Triangle Rain (v3)</title>
+<title>Filling In the Blind Spot — Triangle Rain (v4)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
     html, body { margin:0; padding:0; background:#0d0f12; color:#e8e2d4; font-family:ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace; }
@@ -64,6 +64,36 @@
     </ol>
     <p class="note">Why it works: where the optic nerve leaves the eye there are no light receptors, so that patch of the world sends no signal at all. Faced with a simple, consistent pattern around the gap, the brain fills it in — drawing the surrounding texture across the hole rather than admitting a blank. A lattice is the most fillable pattern there is. Triangles respectfully stand in for the original's dots; the physiology is unchanged.</p>
     <p class="note">Adapted from the VisualLab companion software for <i>Sensation and Perception</i> (8th ed.) by E. Bruce Goldstein.</p>
+
+    <h1 style="margin-top:34px;">SECOND DEMO — THE LINE THAT DOESN'T BREAK</h1>
+    <p class="sub">The companion classic, and the one a lattice artist feels in his bones. Below, a set of long horizontal lines runs the full width of the field — but the bold middle line has a <b>gap</b> cut out of it. Position that gap on your blind spot, exactly as you did for the hole above, and the gap closes: the line reads as one unbroken stroke, completed by the same filling-in, because the brain would rather continue a line than report a break in it.</p>
+    <canvas id="stage2" width="1140" height="420"></canvas>
+    <div class="bar">
+        <button class="ghost" id="calibrate2">Find my blind spot</button>
+        <span>
+            <label for="eye2">Eye:</label>
+            <select id="eye2">
+                <option value="right" selected>Right eye (close left)</option>
+                <option value="left">Left eye (close right)</option>
+            </select>
+        </span>
+        <span>
+            <label for="sep2">Gap distance:</label>
+            <input type="range" id="sep2" min="180" max="560" step="2" value="330">
+            <span class="val" id="sep2Val">330 px</span>
+        </span>
+        <span>
+            <label for="gap">Gap width:</label>
+            <input type="range" id="gap" min="60" max="190" step="2" value="116">
+            <span class="val" id="gapVal">116 px</span>
+        </span>
+    </div>
+    <ol class="how">
+        <li>Same posture as above: arm's length, one eye covered, head still.</li>
+        <li>Stare at this demo's fixation dot and slide <i>Gap distance</i> until the white locator (press <b>Find my blind spot</b>) vanishes — the gap now sits on your blind spot.</li>
+        <li>Hide the locator and look at the bold line: the missing piece is simply <i>not missing</i>. Glance directly at the gap and it reappears instantly — proof the completion was yours, not the screen's.</li>
+    </ol>
+    <p class="note">Surveyor's note: this is the drawn-vertex problem wearing a lab coat. A line that should break, doesn't — because the perceiver completes it. Exactness in the work matters precisely because the eye is this willing to help.</p>
 </div>
 <script>
 (function () {
@@ -202,6 +232,86 @@
 
     tris = makeTriangles(1900);
     drawScene();
+})();
+
+// ---- Second demo: the line that doesn't break ------------------------------
+(function () {
+    var canvas = document.getElementById('stage2');
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+    var W = canvas.width, H = canvas.height;
+    var BG2 = '#262b33';
+    var eyeSel = document.getElementById('eye2');
+    var sepSlider = document.getElementById('sep2');
+    var gapSlider = document.getElementById('gap');
+    var sepVal = document.getElementById('sep2Val');
+    var gapVal = document.getElementById('gapVal');
+    var calibBtn = document.getElementById('calibrate2');
+    var calib = false;
+
+    function dir() { return eyeSel.value === 'right' ? 1 : -1; }
+    function fixation() { return { x: Math.round(W * (dir() > 0 ? 0.30 : 0.70)), y: Math.round(H * 0.50) }; }
+    function gapC() {
+        var f = fixation();
+        return { x: f.x + dir() * parseInt(sepSlider.value, 10), y: f.y, w: parseInt(gapSlider.value, 10) };
+    }
+
+    function draw() {
+        ctx.fillStyle = BG2;
+        ctx.fillRect(0, 0, W, H);
+        var f = fixation(), g = gapC();
+
+        // fine ruled lines, full width
+        ctx.strokeStyle = 'rgba(217,162,78,0.5)';
+        ctx.lineWidth = 2;
+        for (var y = 30; y < H; y += 36) {
+            if (Math.abs(y - f.y) < 4) continue;
+            ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+        }
+
+        // the bold middle line, in two segments with the gap removed
+        ctx.strokeStyle = '#ffc46e';
+        ctx.lineWidth = 7;
+        ctx.lineCap = 'butt';
+        ctx.beginPath(); ctx.moveTo(0, g.y); ctx.lineTo(g.x - g.w / 2, g.y); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(g.x + g.w / 2, g.y); ctx.lineTo(W, g.y); ctx.stroke();
+
+        if (calib) {
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath(); ctx.arc(g.x, g.y, 13, 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = 'rgba(232,226,212,0.4)';
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([5, 5]);
+            ctx.strokeRect(g.x - g.w / 2, g.y - 30, g.w, 60);
+            ctx.setLineDash([]);
+        }
+
+        // fixation dot, same style as demo one
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath(); ctx.arc(f.x, f.y, 9, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#000000';
+        ctx.beginPath(); ctx.arc(f.x, f.y, 6, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = 'rgba(232,226,212,0.6)';
+        ctx.font = '12px ui-monospace, Menlo, Consolas, monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('keep looking here', f.x, f.y + 30);
+    }
+
+    function onParam() {
+        sepVal.textContent = sepSlider.value + ' px';
+        gapVal.textContent = gapSlider.value + ' px';
+        draw();
+    }
+    sepSlider.addEventListener('input', onParam);
+    gapSlider.addEventListener('input', onParam);
+    eyeSel.addEventListener('change', onParam);
+    calibBtn.addEventListener('click', function () {
+        calib = !calib;
+        calibBtn.textContent = calib ? 'Hide locator disc' : 'Find my blind spot';
+        draw();
+    });
+
+    draw();
 })();
 </script>
 </body>
