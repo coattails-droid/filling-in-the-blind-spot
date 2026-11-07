@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Filling In the Blind Spot — Triangle Rain (v2)</title>
+<title>Filling In the Blind Spot — Triangle Rain (v3)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
     html, body { margin:0; padding:0; background:#0d0f12; color:#e8e2d4; font-family:ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace; }
@@ -58,7 +58,7 @@
     </div>
     <ol class="how">
         <li><b>Sit about 50–60&nbsp;cm (roughly arm's length) from the screen</b>, head still, screen centred in front of you.</li>
-        <li><b>Cover one eye</b> (right eye open = default) and press <b>Find my blind spot</b>: a small white disc rides beside the fixation dot. Slide <i>Hole distance</i> slowly until the disc <b>vanishes completely</b> while you stare at the dot. That's your blind spot.</li>
+        <li><b>Cover one eye</b> (right eye open = default) and press <b>Find my blind spot</b>: a small white disc waits down-field from the fixation dot. Slide <i>Hole distance</i> slowly until the disc <b>vanishes completely</b> while you stare at the dot. That's your blind spot.</li>
         <li>Press <b>Start the rain</b>. Keep staring at the dot — do not glance at the hole. Within 5–20 seconds the empty circle floods with triangles and disappears into the field.</li>
         <li>If the hole won't vanish, move a little closer or farther, or nudge the distance slider. Everyone's spot sits a little differently; the demo textbook used the same hunt.</li>
     </ol>
@@ -90,10 +90,13 @@
     function dir() { return eyeSel.value === 'right' ? 1 : -1; }
     // v2 fix: mirror the fixation point for the left eye, so the hole always has
     // the full slider range on-canvas instead of running off the left edge.
-    function fixation() { return { x: Math.round(W * (dir() > 0 ? 0.30 : 0.70)), y: Math.round(H * 0.50) }; }
+    // v3 layout (Coattails 2026-11-07): the fixation dot moves up about halfway
+    // to the top (50% -> 25% of the field height) and the hole moves down about
+    // halfway to the bottom (50% -> 75%), so the pair sits on a diagonal.
+    function fixation() { return { x: Math.round(W * (dir() > 0 ? 0.30 : 0.70)), y: Math.round(H * 0.25) }; }
     function hole() {
         var f = fixation();
-        return { x: f.x + dir() * parseInt(sepSlider.value, 10), y: f.y, r: parseInt(sizeSlider.value, 10) };
+        return { x: f.x + dir() * parseInt(sepSlider.value, 10), y: Math.round(H * 0.75), r: parseInt(sizeSlider.value, 10) };
     }
 
     function makeTriangles(count) {
