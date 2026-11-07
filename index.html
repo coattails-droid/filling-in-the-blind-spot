@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Filling In the Blind Spot — Triangle Rain (v2)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+    html, body { margin:0; padding:0; background:#0d0f12; color:#e8e2d4; font-family:ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace; }
+    header { max-width:1180px; margin:0 auto; padding:18px 20px 4px; }
+    h1 { font-size:20px; font-weight:600; letter-spacing:.5px; color:#ffc46e; margin:0 0 6px; }
+    p.sub { margin:0 0 14px; font-size:13px; line-height:1.55; color:#b9b2a2; max-width:900px; }
+    .wrap { max-width:1180px; margin:0 auto; padding:0 20px 26px; }
+    canvas { display:block; width:100%; height:auto; background:#20242a; border:1px solid #3a3f47; border-radius:8px; }
+    .bar { display:flex; flex-wrap:wrap; gap:10px 18px; align-items:center; margin:14px 0 6px; font-size:13px; }
+    .bar label { color:#b9b2a2; }
+    button { background:#ffc46e; color:#14161a; border:0; border-radius:6px; padding:8px 16px; font:inherit; font-weight:700; cursor:pointer; }
+    button.ghost { background:transparent; color:#e8e2d4; border:1px solid #55565c; font-weight:500; }
+    input[type=range] { accent-color:#ffc46e; width:220px; vertical-align:middle; }
+    select { background:#1b1e24; color:#e8e2d4; border:1px solid #55565c; border-radius:6px; padding:6px 8px; font:inherit; }
+    .val { color:#ffc46e; min-width:52px; display:inline-block; }
+    ol.how { font-size:13px; line-height:1.65; color:#b9b2a2; max-width:900px; padding-left:20px; }
+    ol.how b { color:#e8e2d4; }
+    .note { font-size:12px; color:#8f897c; line-height:1.55; max-width:900px; }
+</style>
+</head>
+<body>
+<header>
+    <h1>FILLING IN THE BLIND SPOT — triangle rain edition</h1>
+    <p class="sub">A copycat of the textbook CD demo, re-drawn in Coattails colours: a field of small flickering triangles, and a clean round hole in it. Position the hole on your eye's blind spot, hold your gaze on the fixation dot, and your visual system will draw the triangles straight across the hole — completing a pattern it cannot actually see.</p>
+</header>
+<div class="wrap">
+    <canvas id="stage" width="1140" height="620"></canvas>
+    <div class="bar">
+        <button id="toggle">▶ Start the rain</button>
+        <button class="ghost" id="calibrate">Find my blind spot</button>
+        <span>
+            <label for="eye">Eye:</label>
+            <select id="eye">
+                <option value="right" selected>Right eye (close left)</option>
+                <option value="left">Left eye (close right)</option>
+            </select>
+        </span>
+        <span>
+            <label for="sep">Hole distance:</label>
+            <input type="range" id="sep" min="180" max="560" step="2" value="330">
+            <span class="val" id="sepVal">330 px</span>
+        </span>
+        <span>
+            <label for="size">Hole size:</label>
+            <input type="range" id="size" min="30" max="95" step="1" value="58">
+            <span class="val" id="sizeVal">58 px</span>
+        </span>
+        <span>
+            <label for="bright">Rain brightness:</label>
+            <input type="range" id="bright" min="30" max="100" step="5" value="65">
+            <span class="val" id="brightVal">65%</span>
+        </span>
+    </div>
+    <ol class="how">
+        <li><b>Sit about 50–60&nbsp;cm (roughly arm's length) from the screen</b>, head still, screen centred in front of you.</li>
+        <li><b>Cover one eye</b> (right eye open = default) and press <b>Find my blind spot</b>: a small white disc rides beside the fixation dot. Slide <i>Hole distance</i> slowly until the disc <b>vanishes completely</b> while you stare at the dot. That's your blind spot.</li>
+        <li>Press <b>Start the rain</b>. Keep staring at the dot — do not glance at the hole. Within 5–20 seconds the empty circle floods with triangles and disappears into the field.</li>
+        <li>If the hole won't vanish, move a little closer or farther, or nudge the distance slider. Everyone's spot sits a little differently; the demo textbook used the same hunt.</li>
+    </ol>
+    <p class="note">Why it works: where the optic nerve leaves the eye there are no light receptors, so that patch of the world sends no signal at all. Faced with a simple, consistent pattern around the gap, the brain fills it in — drawing the surrounding texture across the hole rather than admitting a blank. A lattice is the most fillable pattern there is. Triangles respectfully stand in for the original's dots; the physiology is unchanged.</p>
+</div>
+<script>
+(function () {
+    var canvas = document.getElementById('stage');
+    var ctx = canvas.getContext('2d');
+    var W = canvas.width, H = canvas.height;
+
+    var BG = '#262b33';
+    // Coattails-flavoured speckle palette, muted one notch down from v1 at Calvin's note:
+    // sunlight golds + lotus pinks + teal depths, deeper takes, drawn at slider alpha
+    var COLORS = ['#d9a24e', '#cf8bab', '#d9c8c8', '#a874ad', '#1f826c', '#b56405', '#c9c2b0', '#7ba365'];
+
+    var running = false, calib = false, last = 0, tris = [];
+    var eyeSel = document.getElementById('eye');
+    var sepSlider = document.getElementById('sep');
+    var sizeSlider = document.getElementById('size');
+    var sepVal = document.getElementById('sepVal');
+    var sizeVal = document.getElementById('sizeVal');
+    var brightSlider = document.getElementById('bright');
+    var brightVal = document.getElementById('brightVal');
+    var toggleBtn = document.getElementById('toggle');
+    var calibBtn = document.getElementById('calibrate');
+
+    function dir() { return eyeSel.value === 'right' ? 1 : -1; }
+    // v2 fix: mirror the fixation point for the left eye, so the hole always has
+    // the full slider range on-canvas instead of running off the left edge.
+    function fixation() { return { x: Math.round(W * (dir() > 0 ? 0.30 : 0.70)), y: Math.round(H * 0.50) }; }
+    function hole() {
+        var f = fixation();
+        return { x: f.x + dir() * parseInt(sepSlider.value, 10), y: f.y, r: parseInt(sizeSlider.value, 10) };
+    }
+
+    function makeTriangles(count) {
+        var h = hole(), out = [], guard = 0;
+        while (out.length < count && guard < count * 40) {
+            guard++;
+            var x = Math.random() * W, y = Math.random() * H;
+            var dx = x - h.x, dy = y - h.y;
+            if (dx * dx + dy * dy < (h.r + 4) * (h.r + 4)) continue; // keep the hole clean
+            var s = 3 + Math.random() * 5; // 3–8 px
+            out.push({
+                x: x, y: y, s: s,
+                rot: Math.random() * Math.PI * 2,
+                c: COLORS[(Math.random() * COLORS.length) | 0]
+            });
+        }
+        return out;
+    }
+
+    function drawScene() {
+        ctx.fillStyle = BG;
+        ctx.fillRect(0, 0, W, H);
+
+        // triangle rain, at the brightness the slider asks for
+        ctx.save();
+        ctx.globalAlpha = parseInt(brightSlider.value, 10) / 100;
+        for (var i = 0; i < tris.length; i++) {
+            var t = tris[i];
+            ctx.save();
+            ctx.translate(t.x, t.y);
+            ctx.rotate(t.rot);
+            ctx.fillStyle = t.c;
+            ctx.beginPath();
+            ctx.moveTo(0, -t.s);
+            ctx.lineTo(t.s * 0.87, t.s * 0.6);
+            ctx.lineTo(-t.s * 0.87, t.s * 0.6);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+        }
+        ctx.restore();
+
+        var f = fixation(), h = hole();
+
+        if (!running) {
+            // outline the hole gently before the rain starts, so it can be positioned
+            ctx.strokeStyle = 'rgba(232,226,212,0.35)';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.arc(h.x, h.y, h.r, 0, Math.PI * 2); ctx.stroke();
+        }
+
+        if (calib) {
+            // white locator disc at hole centre
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath(); ctx.arc(h.x, h.y, 13, 0, Math.PI * 2); ctx.fill();
+        }
+
+        // fixation dot: white ring + black core, high contrast like the original
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath(); ctx.arc(f.x, f.y, 9, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#000000';
+        ctx.beginPath(); ctx.arc(f.x, f.y, 6, 0, Math.PI * 2); ctx.fill();
+
+        // label under fixation
+        ctx.fillStyle = 'rgba(232,226,212,0.6)';
+        ctx.font = '12px ui-monospace, Menlo, Consolas, monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('keep looking here', f.x, f.y + 30);
+    }
+
+    function loop(ts) {
+        if (!running) return;
+        if (ts - last > 90) { // ~11 fps flicker, like the original's restless speckle
+            last = ts;
+            tris = makeTriangles(1900);
+            drawScene();
+        }
+        requestAnimationFrame(loop);
+    }
+
+    toggleBtn.addEventListener('click', function () {
+        running = !running;
+        toggleBtn.textContent = running ? '⏸ Stop the rain' : '▶ Start the rain';
+        if (running) { last = 0; tris = makeTriangles(1900); requestAnimationFrame(loop); }
+        else drawScene();
+    });
+    calibBtn.addEventListener('click', function () {
+        calib = !calib;
+        calibBtn.textContent = calib ? 'Hide locator disc' : 'Find my blind spot';
+        drawScene();
+    });
+    function onParam() {
+        sepVal.textContent = sepSlider.value + ' px';
+        sizeVal.textContent = sizeSlider.value + ' px';
+        brightVal.textContent = brightSlider.value + '%';
+        tris = makeTriangles(1900);
+        drawScene();
+    }
+    sepSlider.addEventListener('input', onParam);
+    sizeSlider.addEventListener('input', onParam);
+    brightSlider.addEventListener('input', onParam);
+    eyeSel.addEventListener('change', onParam);
+
+    tris = makeTriangles(1900);
+    drawScene();
+})();
+</script>
+</body>
+</html>
