@@ -20,7 +20,9 @@ Open `index.html` (or the GitHub Pages site) fullscreen.
    circle floods with triangles and disappears into the field.
 
 Sliders adjust hole distance, hole size, and rain brightness. Right eye is the
-default; the fixation point mirrors automatically for the left-eye test.
+default; the fixation point mirrors automatically for the left-eye test. v3
+layout: the fixation dot sits a quarter of the way down the field and the hole
+three quarters down, on a diagonal (director's adjustment, 2026-11-07).
 
 ## Why it works
 
