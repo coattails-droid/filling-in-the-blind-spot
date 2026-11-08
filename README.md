@@ -24,7 +24,9 @@ Sliders adjust distances, hole/gap sizes, and rain brightness. Right eye is
 the default; fixation points mirror automatically for the left-eye tests.
 Layout history: v3 moved the rain demo's fixation dot to a quarter of the
 field height and its hole to three quarters (director's adjustment,
-2026-11-07); v4 added the line demo below the rain demo.
+2026-11-07); v4 added the line demo below the rain demo; v5 added the
+director's Google Analytics tag (G-QFQNW5T87Y), the same tag carried by
+his series pages, at his request 2026-11-08.
 
 ## Why it works
 
